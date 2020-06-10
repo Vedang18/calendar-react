@@ -1,68 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer, DateLocalizer } from "react-big-calendar";
 import moment from "moment";
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+//import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { Info } from '@material-ui/icons';
-import { Slide, Dialog, DialogTitle, DialogActions, DialogContent, Button, TextField } from "@material-ui/core";
+import { Slide, Dialog, DialogTitle, DialogActions, DialogContent, Button } from "@material-ui/core";
 
 import { TransitionProps } from '@material-ui/core/transitions';
-//import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
-//import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { CalenderPageProps, DialogProps } from "./types";
 
-
+const defualtEvents = [
+  {
+    start: moment().toDate(),
+    end: moment().add(15, "minute").toDate(),
+    duration: 15,
+    title: "Demo",
+    desc: "calendar demo",
+  },
+  {
+    start: moment().toDate(),
+    end: moment().add(30, "minute").toDate(),
+    duration: 30,
+    title: "Meeting for calendar",
+    desc: "Status track",
+  },
+  {
+    start: moment().toDate(),
+    end: moment().add(60, "minute").toDate(),
+    duration: 60,
+    title: "Review",
+    desc: "Review code",
+  },
+  {
+    start: moment().toDate(),
+    end: moment().add(45, "minute").toDate(),
+    duration: 45,
+    title: "Client meeting",
+    desc: "Meeting for updates with client",
+  },
+]
 /* 
 TODO: 1. 60% width & height -> done
       2. 2 Calendar on same page -> Check
-      3. Edit event 
-      4. Filter events
+      3. Edit event
+      4. Filter events -> done
       5. Changing theme
       6. Custom colors by adding css Classes
-      7. Work hours or full day
+      7. Work week, Work hours or full day -> done
+      8. Horizontal time slots
 */
 
 const localizer: DateLocalizer = momentLocalizer(moment);
 //const DnDCalendar = withDragAndDrop(Calendar);
 
 const dstate = {
-  events: [
-    {
-      start: moment().toDate(),
-      end: moment().add(15, "minute").toDate(),
-      title: "Some title",
-      desc: "d0",
-    },
-    {
-      start: moment().toDate(),
-      end: moment().add(1, "hour").toDate(),
-      title: "Some title1",
-      desc: "d1",
-    },
-    {
-      start: moment().toDate(),
-      end: moment().add(2, "hour").toDate(),
-      title: "Some title2",
-      desc: "d2",
-    },
-    {
-      start: moment().toDate(),
-      end: moment().add(90, "minute").toDate(),
-      title: "Some title3",
-      desc: "d3",
-    },
-    {
-      start: moment().toDate(),
-      end: moment().add(12, "minute").toDate(),
-      title: "Some title4",
-      desc: "d4",
-    },
-  ],
+  events: defualtEvents,
 };
 
 const Transition = React.forwardRef<any, TransitionProps>((props: any, ref) => <Slide direction="left" ref={ref} {...props} />);
 
+const startTime: Date = moment().toDate();
+startTime.setHours(9);
+startTime.setMinutes(30);
 
-function CalendarPage() {
+const endTime: Date = moment().toDate();
+endTime.setHours(19);
+endTime.setMinutes(59);
+
+
+function CalendarPage(props: CalenderPageProps) {
   const [state, setState] = useState(dstate);
+  const { filters } = props;
+
+  useEffect(() => {
+    if (filters.selectedTime !== 0) {
+      setState({
+        ...state,
+        events: defualtEvents.filter(e => e.duration === filters.selectedTime)
+      });
+    } else {
+      setState({
+        ...state,
+        events: defualtEvents
+      });
+    }
+  }, [filters.selectedTime]);
 
   const handleSelect = ({ start, end, action }: any) => {
     console.log(action);
@@ -70,6 +93,7 @@ function CalendarPage() {
       handleClickOpen({ start, end, isInput: true });
     }
   }
+
 
   const handleOk = ({ start, end, title, desc }: any) => {
     setState({
@@ -79,6 +103,7 @@ function CalendarPage() {
         {
           start,
           end,
+          duration: 15,
           title,
           desc
         },
@@ -103,7 +128,7 @@ function CalendarPage() {
 
 
   return (
-    <div className="App">
+    <div className="Calendar">
       <Calendar
         defaultDate={moment().toDate()}
         defaultView="week"
@@ -118,24 +143,19 @@ function CalendarPage() {
         onSelectEvent={event => handleClickOpen(event)}
         onSelectSlot={handleSelect}
         step={15}
+        min={filters.fullDay ? undefined : startTime}
+        max={filters.fullDay ? undefined : endTime}
         formats={formats}
         components={{
           week: {
             event: Event
           }
         }}
-        scrollToTime={moment().toDate()}
+        scrollToTime={startTime}
       />
       <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />
     </div>
   );
-}
-
-export interface DialogProps {
-  open: boolean;
-  selectedValue: any;
-  onClose: (value: string) => void;
-  onOk?: (val: any) => void;
 }
 
 function CustomDialog(props: DialogProps) {
@@ -166,10 +186,15 @@ function CustomDialog(props: DialogProps) {
         </div> :
           <div className="Input-div">
             {selectedValue && Object.keys(selectedValue).map((e, i) => {
-              let result = e + " : " + selectedValue[e] + "\n";
+              let result = e + " : " + selectedValue[e];
+              if (selectedValue[e] instanceof Date) {
+                result = e + " : " + selectedValue[e].toLocaleString(undefined, { hour12: true });
+              } else if (e === 'duration') {
+                result += " minutes";
+              }
+              //result += "\n";
               return <div>{result}</div>
-            })
-            }
+            })}
           </div>}
       </DialogContent>
       <DialogActions>
