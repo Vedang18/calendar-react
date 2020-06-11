@@ -6,8 +6,10 @@ import { Info } from '@material-ui/icons';
 import { Slide, Dialog, DialogTitle, DialogActions, DialogContent, Button } from "@material-ui/core";
 
 import { TransitionProps } from '@material-ui/core/transitions';
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+//import "react-big-calendar/lib/addons/dragAndDrop/styles.scss";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+//import "react-big-calendar/lib/sass/styles.scss";
+
 import { CalenderPageProps, DialogProps } from "./types";
 
 const defualtEvents = [
@@ -26,8 +28,8 @@ const defualtEvents = [
     desc: "Status track",
   },
   {
-    start: moment().toDate(),
-    end: moment().add(60, "minute").toDate(),
+    start: moment().utc().toDate(),
+    end: moment().utc().add(60, "minute").toDate(),
     duration: 60,
     title: "Review",
     desc: "Review code",
@@ -41,16 +43,17 @@ const defualtEvents = [
   },
 ]
 /* 
-TODO: 1. 60% width & height -> done
-      2. 2 Calendar on same page -> Check
+TODO: 1. 60% width & height -> Done
+      2. 2 Calendar on same page -> Done (One below another)
       3. Edit event
-      4. Filter events -> done
+      4. Filter events -> Done
       5. Changing theme
       6. Custom colors by adding css Classes
-      7. Work week, Work hours or full day -> done
+      7. Work week, Work hours or full day -> Done
       8. Horizontal time slots
 */
 
+moment.locale('en-hi');
 const localizer: DateLocalizer = momentLocalizer(moment);
 //const DnDCalendar = withDragAndDrop(Calendar);
 
@@ -96,19 +99,21 @@ function CalendarPage(props: CalenderPageProps) {
 
 
   const handleOk = ({ start, end, title, desc }: any) => {
-    setState({
-      ...state,
-      events: [
-        ...state.events,
-        {
-          start,
-          end,
-          duration: 15,
-          title,
-          desc
-        },
-      ]
-    })
+    let newEvent = {
+      start,
+      end,
+      duration: 15,
+      title,
+      desc
+    }
+    // setState({
+    //   ...state,
+    //   events: [
+    //     ...state.events,
+    //     newEvent,
+    //   ]
+    // })
+    defualtEvents.push(newEvent);
   }
 
   const handleClickOpen = (value: any) => {
@@ -126,15 +131,16 @@ function CalendarPage(props: CalenderPageProps) {
     eventTimeRangeFormat: () => ""
   };
 
-
   return (
     <div className="Calendar">
       <Calendar
         defaultDate={moment().toDate()}
+        views={['month', 'week', 'day', 'work_week', 'agenda']}
         defaultView="week"
         events={state.events}
         localizer={localizer}
         timeslots={1}
+        step={15}
         selectable
         popup
         dayLayoutAlgorithm='no-overlap'
@@ -142,7 +148,6 @@ function CalendarPage(props: CalenderPageProps) {
         className='Calendar-main'
         onSelectEvent={event => handleClickOpen(event)}
         onSelectSlot={handleSelect}
-        step={15}
         min={filters.fullDay ? undefined : startTime}
         max={filters.fullDay ? undefined : endTime}
         formats={formats}
@@ -166,7 +171,10 @@ function CustomDialog(props: DialogProps) {
     onClose(selectedValue);
   };
 
-  const [formState, setFormState] = useState();
+  const [formState, setFormState] = useState({
+    title: '',
+    desc: ''
+  });
 
   return (
     <Dialog
@@ -181,8 +189,12 @@ function CustomDialog(props: DialogProps) {
       <DialogTitle>{isInput ? 'Enter meeting details' : 'Meeting details'}</DialogTitle>
       <DialogContent>
         {isInput ? <div className="Input-div">
-          <input type="text" placeholder="Enter Title" required onChange={(e) => setFormState({ ...formState, title: e.target.value })} />
-          <input type="text" placeholder="Enter Desc" required onChange={(e) => setFormState({ ...formState, desc: e.target.value })} />
+          <input type="text" placeholder="Enter Title" required
+            value={formState.title ? formState.title : ''}
+            onChange={(e) => setFormState({ ...formState, title: e.target.value })} />
+          <input type="text" placeholder="Enter Desc" required
+            value={formState.desc ? formState.desc : ''}
+            onChange={(e) => setFormState({ ...formState, desc: e.target.value })} />
         </div> :
           <div className="Input-div">
             {selectedValue && Object.keys(selectedValue).map((e, i) => {
@@ -203,6 +215,7 @@ function CustomDialog(props: DialogProps) {
         </Button>
         {isInput && onOk && <Button onClick={() => {
           onOk({ start: selectedValue.start, end: selectedValue.end, title: formState.title, desc: formState.desc })
+          setFormState({ desc: '', title: '' })
           handleClose();
         }} color="primary">
           Ok
