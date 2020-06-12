@@ -12,7 +12,7 @@ export interface DialogProps {
     open: boolean;
     selectedValue: any;
     onClose: (value: string) => void;
-    onOk?: (val: any) => void;
+    onOk: (val: any) => void;
 }
 export interface EventProps extends Event {
     isInput: boolean

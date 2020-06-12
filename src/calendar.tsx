@@ -12,6 +12,7 @@ import Event from './Event';
 
 const defualtEvents = [
   {
+    id: 1,
     start: moment().toDate(),
     end: moment().add(15, "minute").toDate(),
     duration: 15,
@@ -19,6 +20,7 @@ const defualtEvents = [
     desc: "calendar demo",
   },
   {
+    id: 2,
     start: moment().toDate(),
     end: moment().add(30, "minute").toDate(),
     duration: 30,
@@ -26,6 +28,7 @@ const defualtEvents = [
     desc: "Status track",
   },
   {
+    id: 3,
     start: moment().utc().toDate(),
     end: moment().utc().add(60, "minute").toDate(),
     duration: 60,
@@ -33,6 +36,7 @@ const defualtEvents = [
     desc: "Review code",
   },
   {
+    id: 4,
     start: moment().toDate(),
     end: moment().add(45, "minute").toDate(),
     duration: 45,
@@ -43,12 +47,13 @@ const defualtEvents = [
 /* 
 TODO: 1. 60% width & height -> Done
       2. 2 Calendar on same page -> Done (One below another)
-      3. Edit event
-      4. Filter events -> Done
-      5. Changing theme
-      6. Custom colors by adding css Classes
-      7. Work week, Work hours or full day -> Done
-      8. Horizontal time slots
+      3. Filter events -> Done
+      4. Changing theme -> Done
+      5. Custom colors by adding css Classes -> Done
+      6. Work week, Work hours or full day -> Done
+      7. Horizontal time slots -> No Support
+      8. Group of Events
+      9. Edit event -> Done
 */
 
 moment.locale('en-hi');
@@ -95,8 +100,13 @@ function CalendarPage(props: CalenderPageProps) {
   }
 
 
-  const handleOk = ({ start, end, title, desc }: any) => {
+  const handleOk = ({ id, start, end, title, desc }: any) => {
+    if(id) {
+      let editEvent = state.events.find(s => s.id ===id);
+      if(editEvent) editEvent.desc = desc;
+    } else {
     let newEvent = {
+      id: defualtEvents.length + 1,
       start,
       end,
       duration: 15,
@@ -111,6 +121,7 @@ function CalendarPage(props: CalenderPageProps) {
     //   ]
     // })
     defualtEvents.push(newEvent);
+  }
   }
 
   const handleClickOpen = (value: any) => {
@@ -200,9 +211,9 @@ function CalendarPage(props: CalenderPageProps) {
             event: Event
           }
         }}
-        scrollToTime={startTime}
+        scrollToTime={endTime}
       />
-      <CustomDialog  selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />
+      {open && <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />}
     </div>
   );
 }
