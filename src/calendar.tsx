@@ -2,15 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer, DateLocalizer } from "react-big-calendar";
 import moment from "moment";
 //import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import { Info } from '@material-ui/icons';
-import { Slide, Dialog, DialogTitle, DialogActions, DialogContent, Button } from "@material-ui/core";
-
-import { TransitionProps } from '@material-ui/core/transitions';
 //import "react-big-calendar/lib/addons/dragAndDrop/styles.scss";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 //import "react-big-calendar/lib/sass/styles.scss";
 
-import { CalenderPageProps, DialogProps } from "./types";
+import { CalenderPageProps } from "./types";
+import CustomDialog from './CustomDialog';
+import Event from './Event';
 
 const defualtEvents = [
   {
@@ -59,9 +57,9 @@ const localizer: DateLocalizer = momentLocalizer(moment);
 
 const dstate = {
   events: defualtEvents,
+  view: 'week'
 };
 
-const Transition = React.forwardRef<any, TransitionProps>((props: any, ref) => <Slide direction="left" ref={ref} {...props} />);
 
 const startTime: Date = moment().toDate();
 startTime.setHours(9);
@@ -70,7 +68,6 @@ startTime.setMinutes(30);
 const endTime: Date = moment().toDate();
 endTime.setHours(19);
 endTime.setMinutes(59);
-
 
 function CalendarPage(props: CalenderPageProps) {
   const [state, setState] = useState(dstate);
@@ -131,6 +128,50 @@ function CalendarPage(props: CalenderPageProps) {
     eventTimeRangeFormat: () => ""
   };
 
+  const customDayPropGetter = (date: any) => {
+    //Customizing only month
+    if (state.view === 'month') {
+      const border = {
+        borderRight: '1px solid black',
+        borderBottom: '1px solid black',
+      }
+      if (date.getDate() % 2 === 0)
+        return {
+          //className: 'special-day',
+          style: {
+            background: 'rgba(130, 232, 218, 0.69)',
+            ...border,
+          },
+        }
+      else return {
+        //className: 'special-day',
+        style: {
+          background: 'rgba(205, 174, 255, 0.55)',
+          ...border,
+        },
+      }
+    } else if (state.view === 'week' && date.toDateString() === new Date().toDateString()) {
+      return {
+        style: {
+          background: '#fbe0e1',
+        }
+      }
+    } else return {};
+  }
+
+  // const customSlotPropGetter = (date: any) => {
+  //   if (date.getDate() === new Date().getDate())
+  //     return {
+  //       style: {
+  //         background: 'magenta',
+  //         border: '1px solid #adadad'
+  //       },
+  //     }
+  //   else return {
+  //     border: '1px solid #adadad'
+  //   }
+  // }
+
   return (
     <div className="Calendar">
       <Calendar
@@ -138,9 +179,12 @@ function CalendarPage(props: CalenderPageProps) {
         views={['month', 'week', 'day', 'work_week', 'agenda']}
         defaultView="week"
         events={state.events}
+        onView={(v) => setState({ ...state, view: v })}
         localizer={localizer}
         timeslots={1}
         step={15}
+        dayPropGetter={customDayPropGetter}
+        //slotPropGetter={customSlotPropGetter}
         selectable
         popup
         dayLayoutAlgorithm='no-overlap'
@@ -158,81 +202,13 @@ function CalendarPage(props: CalenderPageProps) {
         }}
         scrollToTime={startTime}
       />
-      <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />
+      <CustomDialog  selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />
     </div>
   );
 }
 
-function CustomDialog(props: DialogProps) {
-  const { onClose, selectedValue, open, onOk } = props;
-  console.log(open, selectedValue);
-  const isInput = selectedValue && selectedValue.isInput;
-  const handleClose = () => {
-    onClose(selectedValue);
-  };
 
-  const [formState, setFormState] = useState({
-    title: '',
-    desc: ''
-  });
 
-  return (
-    <Dialog
-      open={open}
-      TransitionComponent={Transition}
-      keepMounted
-      onClose={handleClose}
-      aria-labelledby="alert-dialog-slide-title"
-      aria-describedby="alert-dialog-slide-description"
-      disableBackdropClick={!isInput}
-    >
-      <DialogTitle>{isInput ? 'Enter meeting details' : 'Meeting details'}</DialogTitle>
-      <DialogContent>
-        {isInput ? <div className="Input-div">
-          <input type="text" placeholder="Enter Title" required
-            value={formState.title ? formState.title : ''}
-            onChange={(e) => setFormState({ ...formState, title: e.target.value })} />
-          <input type="text" placeholder="Enter Desc" required
-            value={formState.desc ? formState.desc : ''}
-            onChange={(e) => setFormState({ ...formState, desc: e.target.value })} />
-        </div> :
-          <div className="Input-div">
-            {selectedValue && Object.keys(selectedValue).map((e, i) => {
-              let result = e + " : " + selectedValue[e];
-              if (selectedValue[e] instanceof Date) {
-                result = e + " : " + selectedValue[e].toLocaleString(undefined, { hour12: true });
-              } else if (e === 'duration') {
-                result += " minutes";
-              }
-              //result += "\n";
-              return <div>{result}</div>
-            })}
-          </div>}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          {isInput ? 'Cancel' : 'Ok'}
-        </Button>
-        {isInput && onOk && <Button onClick={() => {
-          onOk({ start: selectedValue.start, end: selectedValue.end, title: formState.title, desc: formState.desc })
-          setFormState({ desc: '', title: '' })
-          handleClose();
-        }} color="primary">
-          Ok
-          </Button>}
-      </DialogActions>
-    </Dialog>
-  );
-}
-
-function Event({ event }: any) {
-  return (
-    <span>
-      <Info color="secondary" />
-      <strong style={{ margin: '0 0 0 5px', color: 'yellow' }}>{event.title}</strong>
-    </span>
-  )
-}
 
 
 export default CalendarPage;

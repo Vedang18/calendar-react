@@ -19,10 +19,21 @@
   float:left;
   background-color:whitesmoke;
   width:20vw;
-  height: 80vh;
   margin: 10px;
   text-align: start;
+  display: grid;
+ 
 }
+/* .rbc-today {
+  background-color: #fbe0e1 !important;
+} */
+.Left > label {
+  border: 1px solid #a967aa;
+  border-radius: 4px;
+  padding: 10px 5px;
+  margin: 10px 5px; 
+}
+
 
 .Banner {
   height: 50px;
