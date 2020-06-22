@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Slide, Dialog, DialogTitle, DialogActions, DialogContent, Button } from "@material-ui/core";
 import { TransitionProps } from '@material-ui/core/transitions';
-import { DialogProps } from "./types";
-
+import { DialogProps } from "./utils/types";
+import EventPanel from './component/EventPanel';
 
 const Transition = React.forwardRef<any, TransitionProps>((props: any, ref) => <Slide direction="left" ref={ref} {...props} />);
 
@@ -36,14 +36,14 @@ export default function CustomDialog(props: DialogProps) {
         <Dialog
             open={open}
             TransitionComponent={Transition}
-            keepMounted
+            fullWidth
             onClose={handleClose}
             aria-labelledby="alert-dialog-slide-title"
             aria-describedby="alert-dialog-slide-description"
             disableBackdropClick={!isInput}
         >
             <DialogTitle>{isInput ? 'Enter meeting details' : 'Meeting details'}</DialogTitle>
-            <DialogContent>
+            <DialogContent dividers>
                 {isInput || formState.isEdit ? <div className="Input-div">
                     <input type="text" placeholder="Enter Title" disabled={formState.isEdit}
                         value={formState.title}
@@ -64,7 +64,7 @@ export default function CustomDialog(props: DialogProps) {
                             return <div key={i}>{result}</div>
                         })}
                     </div>}
-            </DialogContent>
+                   </DialogContent>
             <DialogActions>
                 <Button onClick={() => {
                     setFormState({ isEdit: false, desc: '', title: '' })

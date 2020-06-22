@@ -1,77 +1,74 @@
 import React, { useState } from 'react';
 import './App.css';
 import Calendar from './Calendar';
-import { Select, MenuItem, FormControlLabel, Switch } from '@material-ui/core';
-import { IFilter } from './types';
-
+import SideDrawer from './component/SideDrawer';
+import { IFilter } from './utils/types';
+import clsx from 'clsx';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
+import MenuIcon from '@material-ui/icons/Menu';
+import { SideDrawerStyles } from './utils/styles';
 
 const initialState: IFilter = {
   selectedTime: 0,
-  fullDay: false
+  fullDay: true
 }
 function App() {
   const [filters, setFilters] = useState<IFilter>(initialState);
   const [showOtherCalendar, setShowOtherCalendar] = useState<boolean>(false);
+  const [open, setOpen] = React.useState(false);
+  const classes = SideDrawerStyles();
 
-  const handleDropdown = (evt: React.ChangeEvent<{ value: any }>) => {
-    setFilters({
-      ...filters,
-      selectedTime: evt.target.value
-    });
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
 
-  }
-  const handleSwitch = (evt: any) => {
-    setFilters({
-      ...filters,
-      fullDay: evt.target.checked
-    });
-  }
 
   return (
     <div className="App">
-      <header className="Banner">Calendar</header>
-      <div>
-        <div className="Left">
-          <FormControlLabel
-            control={<Select
-            value={filters.selectedTime}
-            fullWidth
-            variant="outlined"
-            onChange={handleDropdown}
-            autoWidth={true}
-            margin='dense'
+      <div className={classes.root}>
+      <CssBaseline />
+      <AppBar
+        position="fixed"
+        className={clsx(classes.appBar, {
+          [classes.appBarShift]: open,
+        })}
+      >
+        <Toolbar className="Banner">
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerOpen}
+            edge="start"
+            className={clsx(classes.menuButton, open && classes.hide)}
           >
-            <MenuItem value={0}>All</MenuItem>
-            <MenuItem value={15}>15 Minutes</MenuItem>
-            <MenuItem value={30}>30 Minutes</MenuItem>
-            <MenuItem value={45}>45 Minutes</MenuItem>
-            <MenuItem value={60}>1 Hour</MenuItem>
-          </Select>}
-          label="Meeting Duration"
-          labelPlacement="top"/>
-  
-          <FormControlLabel
-            control={<Switch
-              checked={filters.fullDay}
-              onChange={handleSwitch}
-              color="primary"
-            />}
-            label="Show 24 Hr Calendar"
-            labelPlacement="start"
-          />
-      
-          <FormControlLabel
-            control={<Switch
-              checked={showOtherCalendar}
-              onChange={()=>setShowOtherCalendar(!showOtherCalendar)}
-            />}
-            label="Show Other Calendar"
-            labelPlacement="top"
-          />
-        </div>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h5" noWrap>
+            Calendar
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <SideDrawer filters={filters} setFilters={setFilters}
+        showOtherCalendar={showOtherCalendar}
+        setShowOtherCalendar={setShowOtherCalendar}
+        open={open} setOpen={setOpen}/>
+
+      <main
+        className={clsx(classes.content, {
+          [classes.contentShift]: open,
+        })}
+      >
+        <div className={classes.drawerHeader} />
         <Calendar filters={filters} />
-      </div>
-      {showOtherCalendar && <Calendar filters={initialState} />}
+
+        {showOtherCalendar && <Calendar filters={initialState} />}
+      </main>
+    </div>
     </div>
   );
 }

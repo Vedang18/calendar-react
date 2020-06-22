@@ -1,60 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer, DateLocalizer } from "react-big-calendar";
 import moment from "moment";
+import _ from 'lodash'
 //import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 //import "react-big-calendar/lib/addons/dragAndDrop/styles.scss";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 //import "react-big-calendar/lib/sass/styles.scss";
 
-import { CalenderPageProps } from "./types";
+import { CalenderPageProps, EventProps } from "./utils/types";
 import CustomDialog from './CustomDialog';
-import Event from './Event';
+import CalendarEvent from './component/CalendarEvent';
+import CalendarMonthEvent from './component/CalendarMonthEvent';
+import EventList from './component/EventListDialog';
 
-const defualtEvents = [
-  {
-    id: 1,
-    start: moment().toDate(),
-    end: moment().add(15, "minute").toDate(),
-    duration: 15,
-    title: "Demo",
-    desc: "calendar demo",
-  },
-  {
-    id: 2,
-    start: moment().toDate(),
-    end: moment().add(30, "minute").toDate(),
-    duration: 30,
-    title: "Meeting for calendar",
-    desc: "Status track",
-  },
-  {
-    id: 3,
-    start: moment().utc().toDate(),
-    end: moment().utc().add(60, "minute").toDate(),
-    duration: 60,
-    title: "Review",
-    desc: "Review code",
-  },
-  {
-    id: 4,
-    start: moment().toDate(),
-    end: moment().add(45, "minute").toDate(),
-    duration: 45,
-    title: "Client meeting",
-    desc: "Meeting for updates with client",
-  },
-]
-/* 
-TODO: 1. 60% width & height -> Done
-      2. 2 Calendar on same page -> Done (One below another)
-      3. Filter events -> Done
-      4. Changing theme -> Done
-      5. Custom colors by adding css Classes -> Done
-      6. Work week, Work hours or full day -> Done
-      7. Horizontal time slots -> No Support
-      8. Group of Events
-      9. Edit event -> Done
-*/
+const defualtEvents:any[] = [
+  { id: 1, title: 'Demo from client', start: moment(new Date()).add(30, "minute").toDate(), duration: 45, type: 1, desc: "Event 1 desc", customer: "a1@b.co.in", participant: "No@1oo.mz" },
+  { id: 2, title: 'Customer visit', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 2, desc: "Event 2 desc", customer: "a2@b.co.in", participant: "No@2oo.mz" },
+  { id: 3, title: 'Customer meeting', start: moment(new Date()).add(220, "minute").toDate(), duration: 60, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 4, title: 'Participant details', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 5, title: 'Revisit for all', start: moment(new Date()).add(50, "minute").toDate(), duration: 45, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 6, title: 'Test', start: moment(new Date()).add(10, "minute").toDate(), duration: 30, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 7, title: 'Trial', start: moment(new Date()).add(540, "minute").toDate(), duration: 45, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 8, title: 'Paticipant overview', start: moment(new Date()).add(430, "minute").toDate(), duration: 60, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 9, title: 'Review meeting', start: moment(new Date()).add(530, "minute").toDate(), duration: 30, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 10, title: 'Checking', start: moment(new Date()).add(130, "minute").toDate(), duration: 45, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+  { id: 11, title: 'Initial meeting with all', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
+];
+
+let events = _.chain(defualtEvents)
+            .groupBy(function(obj) { return Math.floor(+(obj.start)/(1000*60*15)); })
+            .sortBy(function(v, k) { return k; })
+            .map(o=>{return {events: o,start:o[0].start,end:moment(o[0].start).add(15, "minute").toDate(), title:''}})
+            .value();
+
+console.log(events);
 
 moment.locale('en-hi');
 const localizer: DateLocalizer = momentLocalizer(moment);
@@ -93,35 +72,37 @@ function CalendarPage(props: CalenderPageProps) {
   }, [filters.selectedTime]);
 
   const handleSelect = ({ start, end, action }: any) => {
-    console.log(action);
-    if (action !== 'click') {
-      handleClickOpen({ start, end, isInput: true });
-    }
+    alert('Implement Input InProgress '+state.view);
+   
+    // console.log(action);
+    // if (action !== 'click') {
+    //   handleClickOpen({ start, end, isInput: true });
+    // }
   }
 
 
   const handleOk = ({ id, start, end, title, desc }: any) => {
-    if(id) {
-      let editEvent = state.events.find(s => s.id ===id);
-      if(editEvent) editEvent.desc = desc;
+    if (id) {
+      let editEvent = state.events.find(s => s.id === id);
+      if (editEvent) editEvent.desc = desc;
     } else {
-    let newEvent = {
-      id: defualtEvents.length + 1,
-      start,
-      end,
-      duration: 15,
-      title,
-      desc
+      let newEvent = {
+        id: defualtEvents.length + 1,
+        start,
+        end,
+        duration: 15,
+        title,
+        desc
+      }
+      // setState({
+      //   ...state,
+      //   events: [
+      //     ...state.events,
+      //     newEvent,
+      //   ]
+      // })
+      defualtEvents.push(newEvent);
     }
-    // setState({
-    //   ...state,
-    //   events: [
-    //     ...state.events,
-    //     newEvent,
-    //   ]
-    // })
-    defualtEvents.push(newEvent);
-  }
   }
 
   const handleClickOpen = (value: any) => {
@@ -143,21 +124,21 @@ function CalendarPage(props: CalenderPageProps) {
     //Customizing only month
     if (state.view === 'month') {
       const border = {
-        borderRight: '1px solid black',
-        borderBottom: '1px solid black',
+        borderRight: '1px solid #abc',
+        borderBottom: '1px solid #cba',
       }
       if (date.getDate() % 2 === 0)
         return {
           //className: 'special-day',
           style: {
-            background: 'rgba(130, 232, 218, 0.69)',
+            background: 'rgba(100, 255, 240, 0.3)',
             ...border,
           },
         }
       else return {
         //className: 'special-day',
         style: {
-          background: 'rgba(205, 174, 255, 0.55)',
+          //background: 'rgba(110, 220, 135, 0.7)',
           ...border,
         },
       }
@@ -170,32 +151,18 @@ function CalendarPage(props: CalenderPageProps) {
     } else return {};
   }
 
-  // const customSlotPropGetter = (date: any) => {
-  //   if (date.getDate() === new Date().getDate())
-  //     return {
-  //       style: {
-  //         background: 'magenta',
-  //         border: '1px solid #adadad'
-  //       },
-  //     }
-  //   else return {
-  //     border: '1px solid #adadad'
-  //   }
-  // }
-
   return (
     <div className="Calendar">
       <Calendar
         defaultDate={moment().toDate()}
-        views={['month', 'week', 'day', 'work_week', 'agenda']}
+        views={['month', 'week', 'day', 'work_week']} //, 'agenda'
         defaultView="week"
-        events={state.events}
+        events={events}
         onView={(v) => setState({ ...state, view: v })}
         localizer={localizer}
         timeslots={1}
         step={15}
         dayPropGetter={customDayPropGetter}
-        //slotPropGetter={customSlotPropGetter}
         selectable
         popup
         dayLayoutAlgorithm='no-overlap'
@@ -208,18 +175,21 @@ function CalendarPage(props: CalenderPageProps) {
         formats={formats}
         components={{
           week: {
-            event: Event
+            event: CalendarEvent
+          },
+          day:{
+            event: CalendarEvent
+          },
+          month:{
+            event: CalendarMonthEvent
           }
         }}
         scrollToTime={endTime}
       />
-      {open && <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />}
+      {/* {open && <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />} */}
+      {open && <EventList events={selectedValue.events} handleClose={handleClose} open={open} />}
     </div>
   );
 }
-
-
-
-
 
 export default CalendarPage;
