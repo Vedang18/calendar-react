@@ -63,7 +63,7 @@ export const SideDrawerStyles = makeStyles((theme: Theme) =>
 export const ExpansionPanelStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      minWidth: '400px',
+      minWidth: '300px',
       width: '100%',
       border: '1px solid #999',
       margin: '10px 0',

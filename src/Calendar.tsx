@@ -7,40 +7,31 @@ import _ from 'lodash'
 import "react-big-calendar/lib/css/react-big-calendar.css";
 //import "react-big-calendar/lib/sass/styles.scss";
 
-import { CalenderPageProps, EventProps } from "./utils/types";
-import CustomDialog from './CustomDialog';
+import { CalenderPageProps } from "./utils/types";
 import CalendarEvent from './component/CalendarEvent';
 import CalendarMonthEvent from './component/CalendarMonthEvent';
 import EventList from './component/EventListDialog';
+import BookingDialog from './component/BookingDialog';
+import * as SampleInput from './utils/inputs'
 
-const defualtEvents:any[] = [
-  { id: 1, title: 'Demo from client', start: moment(new Date()).add(30, "minute").toDate(), duration: 45, type: 1, desc: "Event 1 desc", customer: "a1@b.co.in", participant: "No@1oo.mz" },
-  { id: 2, title: 'Customer visit', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 2, desc: "Event 2 desc", customer: "a2@b.co.in", participant: "No@2oo.mz" },
-  { id: 3, title: 'Customer meeting', start: moment(new Date()).add(220, "minute").toDate(), duration: 60, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 4, title: 'Participant details', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 5, title: 'Revisit for all', start: moment(new Date()).add(50, "minute").toDate(), duration: 45, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 6, title: 'Test', start: moment(new Date()).add(10, "minute").toDate(), duration: 30, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 7, title: 'Trial', start: moment(new Date()).add(540, "minute").toDate(), duration: 45, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 8, title: 'Paticipant overview', start: moment(new Date()).add(430, "minute").toDate(), duration: 60, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 9, title: 'Review meeting', start: moment(new Date()).add(530, "minute").toDate(), duration: 30, type: 3, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 10, title: 'Checking', start: moment(new Date()).add(130, "minute").toDate(), duration: 45, type: 1, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-  { id: 11, title: 'Initial meeting with all', start: moment(new Date()).add(130, "minute").toDate(), duration: 15, type: 2, desc: "Event 3 desc", customer: "a3@b.co.in", participant: "No3@oo.mz" },
-];
+const appointments = SampleInput.CustomerAppointments; 
 
-let events = _.chain(defualtEvents)
-            .groupBy(function(obj) { return Math.floor(+(obj.start)/(1000*60*15)); })
-            .sortBy(function(v, k) { return k; })
-            .map(o=>{return {events: o,start:o[0].start,end:moment(o[0].start).add(15, "minute").toDate(), title:''}})
-            .value();
+function mapAppointment(eventArr: any[]) {
+  console.log("refreshing", eventArr);
+  return _.chain(eventArr)
+    .groupBy(function (obj) { return Math.floor(+(obj.startTime) / (1000 * 60 * 15)); })
+    .sortBy(function (v, k) { return k; })
+    .map(o => { return { events: o, start: o[0].startTime, end: moment(o[0].startTime).add(15, "minute").toDate(), title: '' } })
+    .value();
+}
 
-console.log(events);
-
+const mappedEvents = mapAppointment(appointments);
 moment.locale('en-hi');
 const localizer: DateLocalizer = momentLocalizer(moment);
 //const DnDCalendar = withDragAndDrop(Calendar);
 
 const dstate = {
-  events: defualtEvents,
+  events: mappedEvents,
   view: 'week'
 };
 
@@ -58,64 +49,39 @@ function CalendarPage(props: CalenderPageProps) {
   const { filters } = props;
 
   useEffect(() => {
-    if (filters.selectedTime !== 0) {
-      setState({
-        ...state,
-        events: defualtEvents.filter(e => e.duration === filters.selectedTime)
-      });
-    } else {
-      setState({
-        ...state,
-        events: defualtEvents
-      });
-    }
-  }, [filters.selectedTime]);
+    setState({ ...state, events: mapAppointment(appointments) });
+  }, [appointments.length]);
 
-  const handleSelect = ({ start, end, action }: any) => {
-    alert('Implement Input InProgress '+state.view);
-   
-    // console.log(action);
-    // if (action !== 'click') {
-    //   handleClickOpen({ start, end, isInput: true });
-    // }
-  }
-
-
-  const handleOk = ({ id, start, end, title, desc }: any) => {
-    if (id) {
-      let editEvent = state.events.find(s => s.id === id);
-      if (editEvent) editEvent.desc = desc;
-    } else {
-      let newEvent = {
-        id: defualtEvents.length + 1,
-        start,
-        end,
-        duration: 15,
-        title,
-        desc
-      }
-      // setState({
-      //   ...state,
-      //   events: [
-      //     ...state.events,
-      //     newEvent,
-      //   ]
-      // })
-      defualtEvents.push(newEvent);
+  const handleSlotSelect = ({ start, end, action }: any) => {
+    console.log(action);
+    if (action !== 'click') {
+      setSelectedValue({ start, end, isInput: true });
+      setBookingOpen(true);
     }
   }
 
-  const handleClickOpen = (value: any) => {
+  const handleCreate = (data: any) => {
+    let ev = { ...data, id: appointments.length + 1 }
+    appointments.push(ev);
+  }
+
+  const handleEventOpen = (value: any) => {
     setSelectedValue(value);
-    setOpen(true);
+    setDetailsOpen(true);
   };
 
-  const handleClose = (value: any) => {
-    setOpen(false);
+  const handleDeatilClose = (value: any) => {
+    setDetailsOpen(false);
   };
 
-  const [open, setOpen] = useState(false);
+  const handleBookingClose = (value: any) => {
+    setBookingOpen(false);
+  };
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState();
+  
   const formats: Object = {
     eventTimeRangeFormat: () => ""
   };
@@ -157,7 +123,7 @@ function CalendarPage(props: CalenderPageProps) {
         defaultDate={moment().toDate()}
         views={['month', 'week', 'day', 'work_week']} //, 'agenda'
         defaultView="week"
-        events={events}
+        events={state.events}
         onView={(v) => setState({ ...state, view: v })}
         localizer={localizer}
         timeslots={1}
@@ -168,8 +134,8 @@ function CalendarPage(props: CalenderPageProps) {
         dayLayoutAlgorithm='no-overlap'
         popupOffset={10}
         className='Calendar-main'
-        onSelectEvent={event => handleClickOpen(event)}
-        onSelectSlot={handleSelect}
+        onSelectEvent={event => handleEventOpen(event)}
+        onSelectSlot={handleSlotSelect}
         min={filters.fullDay ? undefined : startTime}
         max={filters.fullDay ? undefined : endTime}
         formats={formats}
@@ -177,17 +143,19 @@ function CalendarPage(props: CalenderPageProps) {
           week: {
             event: CalendarEvent
           },
-          day:{
+          day: {
             event: CalendarEvent
           },
-          month:{
+          month: {
             event: CalendarMonthEvent
           }
         }}
-        scrollToTime={endTime}
+        scrollToTime={startTime}
       />
-      {/* {open && <CustomDialog selectedValue={selectedValue} open={open} onClose={handleClose} onOk={handleOk} />} */}
-      {open && <EventList events={selectedValue.events} handleClose={handleClose} open={open} />}
+      {bookingOpen && <BookingDialog selectedValue={selectedValue} open={bookingOpen}
+        handleClose={handleBookingClose} onCreate={handleCreate} />}
+      {detailsOpen && <EventList events={selectedValue.events} 
+                      handleClose={handleDeatilClose} open={detailsOpen} />}
     </div>
   );
 }

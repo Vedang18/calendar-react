@@ -1,11 +1,11 @@
 import React from "react";
-import { Slide, Dialog, DialogContent } from "@material-ui/core";
+import { Slide, Dialog, DialogContent,DialogTitle } from "@material-ui/core";
 import { TransitionProps } from '@material-ui/core/transitions';
-import { EventProps } from "../utils/types";
+import { Appointment } from "../utils/types";
 import EventPanel from '../component/EventPanel';
 
 interface EventListProps {
-    events: EventProps[];
+    events: Appointment[];
     handleClose: any;
     open: boolean;
 }
@@ -25,12 +25,11 @@ export default function EventList(props: EventListProps) {
             open={open}
             TransitionComponent={Transition}
             onClose={handleClose}
-            fullWidth
-            aria-labelledby="alert-dialog-slide-title"
-            aria-describedby="alert-dialog-slide-description"
-            //disableBackdropClick={true}
-            style={{ minHeight: '40vh'}}
+            fullScreen
+            style={{maxWidth:"40vw",inset:'0 0 0 auto'}}
         >
+
+        <DialogTitle>Appointments</DialogTitle>
             <DialogContent>
                 {events.map((e, i) => {
                     return <EventPanel key={i} event={e} expanded={expanded} handleChange={handleChange}/>
